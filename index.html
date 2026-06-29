@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="株レポート">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1117">
+<title>📈 株レポート</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#21262d;
+  --bd:#30363d;--bds:#484f58;
+  --tx:#e6edf3;--mu:#8b949e;--dm:#656d76;
+  --ac:#58a6ff;--acb:#1c2d3f;--acbd:#1f6feb;
+  --up:#3fb950;--upb:#0d2119;--upbd:#238636;
+  --dn:#f85149;--dnb:#2d1212;--dnbd:#da3633;
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  font-size:16px;overflow:hidden}
+#app{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+/* HEADER */
+#hdr{background:var(--s1);border-bottom:1px solid var(--bd);
+  padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));flex-shrink:0}
+.hdr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.hdr-title{font-size:18px;font-weight:700;color:var(--tx)}
+.hdr-sub{font-size:9px;color:var(--dm);letter-spacing:1.5px;margin-bottom:3px}
+
+/* MARKET BAR */
+.mbar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--bd);border-radius:8px;overflow:hidden}
+.mi{background:var(--s2);padding:6px 10px}
+.mi-l{font-size:9px;color:var(--dm);margin-bottom:2px}
+.mi-v{font-family:monospace;font-size:12px;font-weight:600;color:var(--tx)}
+.mi-ch{font-family:monospace;font-size:10px}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:12px 16px;padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+
+/* TAB BAR */
+#tabs{position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:var(--s1);border-top:1px solid var(--bd);
+  display:grid;grid-template-columns:repeat(3,1fr);
+  padding-bottom:env(safe-area-inset-bottom)}
+.tb{display:flex;flex-direction:column;align-items:center;
+  padding:10px 4px 8px;background:none;border:none;cursor:pointer;
+  color:var(--dm);font-size:10px;gap:3px;font-family:inherit;
+  transition:color .15s}
+.tb.on{color:var(--ac)}
+.tb .ico{font-size:20px;line-height:1}
+
+/* SETUP */
+#setup{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:32px 24px;text-align:center}
+.sin{width:100%;background:var(--s2);border:1px solid var(--bd);
+  border-radius:10px;padding:14px 16px;color:var(--tx);font-size:16px;
+  outline:none;margin-bottom:10px;font-family:inherit}
+.sin:focus{border-color:var(--acbd)}
+.sbtn{width:100%;background:var(--acbd);color:#fff;border:none;
+  border-radius:10px;padding:15px;font-size:17px;font-weight:600;
+  cursor:pointer;font-family:inherit}
+.rbtn{background:var(--acbd);color:#fff;border:none;border-radius:7px;
+  padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;
+  overflow:hidden;margin-bottom:10px}
+.chd{padding:12px 14px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:flex-start}
+.cbd{border-top:1px solid var(--bd);padding:12px 14px;background:var(--bg)}
+
+/* METRIC GRID */
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--bd);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.mgi{background:var(--s2);padding:7px 4px;text-align:center}
+.mgi-l{font-size:8px;color:var(--dm);margin-bottom:2px}
+.mgi-v{font-family:monospace;font-size:11px;color:var(--tx)}
+
+/* PILL */
+.pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;
+  display:inline-block;white-space:nowrap}
+.code-pill{font-family:monospace;font-size:11px;font-weight:600;
+  background:var(--acb);color:var(--ac);border:1px solid #1f6feb44;
+  padding:2px 8px;border-radius:5px;display:inline-block}
+.exch-pill{font-size:10px;color:var(--mu);background:var(--s2);
+  border:1px solid var(--bd);padding:1px 6px;border-radius:4px;display:inline-block}
+
+/* INFO BOXES */
+.ibox{background:var(--acb);border:1px solid #1f6feb44;border-radius:8px;
+  padding:9px 13px;margin-bottom:10px}
+.ibox-l{font-size:9px;color:var(--ac);margin-bottom:4px;letter-spacing:.5px}
+.ibox-t{font-size:13px;color:var(--tx);line-height:1.7}
+.bbgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.bull{background:var(--upb);border:1px solid #23863644;border-radius:8px;padding:9px 13px}
+.bear{background:var(--dnb);border:1px solid #da363344;border-radius:8px;padding:9px 13px}
+.bb-l{font-size:9px;margin-bottom:4px}
+.bb-t{font-size:12px;color:var(--tx);line-height:1.6}
+.vbar{display:flex;align-items:flex-start;gap:8px;padding:9px 13px;border-radius:8px}
+
+/* SUMMARY */
+.summary{background:var(--acb);border:1px solid #1f6feb44;border-radius:8px;
+  padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--tx);line-height:1.8}
+.summary-l{font-size:9px;color:var(--ac);margin-bottom:6px;letter-spacing:.5px}
+
+/* HISTORY */
+.hcard{border:1px solid var(--bd);border-radius:10px;padding:14px;
+  margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.hcard.on{background:var(--acb);border-color:var(--acbd)}
+
+/* LOADING */
+#loading{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:32px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+
+/* MISC */
+.mono{font-family:monospace}
+.err{background:var(--dnb);border:1px solid #da363344;border-radius:8px;
+  padding:12px 14px;margin-bottom:12px;color:var(--dn);font-size:13px}
+.disc{font-size:10px;color:var(--dm);padding:10px 12px;background:var(--s1);
+  border:1px solid var(--bd);border-radius:8px;margin-top:8px;line-height:1.7}
+.empty{text-align:center;padding:48px 20px;color:var(--mu);font-size:14px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="loading">
+    <div style="font-size:48px;margin-bottom:16px;animation:pulse 1s infinite">📈</div>
+    <div style="font-size:15px;color:var(--tx)">起動中...</div>
+  </div>
+</div>
+<script>
+const SYS=`あなたは日本株専門の投資アナリストです。JSONのみを出力してください。コードブロックや前後の説明は不要です。
+
+【JSONルール・厳守】
+・全ての文字列値は1行で書く（改行コード禁止）
+・文字列内にダブルクォート(")を使わない（「」を使うこと）
+・末尾カンマ禁止
+・数値フィールドはnullか数値のみ
+
+{"report_date":"YYYY年MM月DD日（曜日）","market":{"nikkei":数値orNull,"nikkei_change":数値orNull,"nikkei_change_pct":数値orNull,"topix":数値orNull,"usd_jpy":数値orNull,"summary":"市場状況1〜2文（1行）"},"news_stocks":[{"name":"会社名","code":"証券コード","exchange":"東証P","sector":"業種","price":数値orNull,"change_pct":数値orNull,"market_cap_b":数値orNull,"per":数値orNull,"pbr":数値orNull,"div_yield":数値orNull,"news_headline":"ニュース1文（1行）","business":"事業内容1文（1行）","bull_case":"上昇材料1〜2文（1行）","bear_case":"リスク1〜2文（1行）","verdict":"注目 or 様子見 or 警戒","verdict_reason":"判断1文（1行）"}],"future_stocks":[{"name":"会社名","code":"証券コード","exchange":"東証P","sector":"業種","price":数値orNull,"change_pct":数値orNull,"market_cap_b":数値orNull,"per":数値orNull,"pbr":数値orNull,"div_yield":数値orNull,"why_future":"期待理由1〜2文（1行）","business":"事業内容1文（1行）","catalyst":"上昇材料1〜2文（1行）","risk":"リスク1文（1行）","verdict":"強気 or 中立 or 弱気","verdict_reason":"判断1文（1行）"}]}
+
+news_stocksは3〜5社、future_stocksは2〜3社。不確かな数値はnull。`;
+
+const VS={注目:{bg:'#1c2d3f',bd:'#1f6feb',tx:'#58a6ff'},様子見:{bg:'#21262d',bd:'#484f58',tx:'#8b949e'},警戒:{bg:'#2d1212',bd:'#da3633',tx:'#f85149'},強気:{bg:'#1c2d3f',bd:'#1f6feb',tx:'#58a6ff'},中立:{bg:'#21262d',bd:'#484f58',tx:'#8b949e'},弱気:{bg:'#2d1212',bd:'#da3633',tx:'#f85149'}};
+const PHASES=['📡 最新ニュースを収集中...','🔍 銘柄をスクリーニング中...','📊 財務データを解析中...','✍️ レポートを生成中...'];
+
+const fN=(v,s='')=>v==null?'—':`${Number(v).toLocaleString('ja-JP')}${s}`;
+const fP=(v)=>v==null?'—':`${v>0?'+':''}${Number(v).toFixed(2)}%`;
+const pC=(v)=>v==null?'#8b949e':v>0?'#3fb950':v<0?'#f85149':'#8b949e';
+const getKey=()=>{const d=new Date();return `jstock_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;};
+const kLbl=(k)=>{const d=k.replace('jstock_','');return `${d.slice(0,4)}/${d.slice(4,6)}/${d.slice(6,8)}`;};
+
+// ─── JSON抽出・修復ユーティリティ ───────────────────────────────
+function extractJSON(rawText){
+  // マークダウンのコードブロックを除去
+  let str=rawText.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+
+  // { の開始位置を探す
+  const start=str.indexOf('{');
+  if(start===-1)throw new Error('レスポンスにJSONが含まれていません。再生成してください。');
+
+  // 対応する } を文字単位で追跡（文字列内は無視）
+  let depth=0,inStr=false,esc=false,end=-1;
+  for(let i=start;i<str.length;i++){
+    const c=str[i];
+    if(esc){esc=false;continue;}
+    if(c==='\\'&&inStr){esc=true;continue;}
+    if(c==='"'){inStr=!inStr;continue;}
+    if(!inStr){
+      if(c==='{'||c==='[')depth++;
+      else if(c==='}'||c===']'){if(--depth===0){end=i;break;}}
+    }
+  }
+  if(end===-1)throw new Error('JSONが途中で切れています。再生成してください。');
+  str=str.slice(start,end+1);
+
+  // 文字列内の未エスケープ制御文字を修正（改行・タブなど）
+  let fixed='',inString=false,escaped=false;
+  for(let i=0;i<str.length;i++){
+    const c=str[i];
+    if(escaped){fixed+=c;escaped=false;continue;}
+    if(c==='\\'&&inString){escaped=true;fixed+=c;continue;}
+    if(c==='"'){inString=!inString;fixed+=c;continue;}
+    if(inString){
+      if(c==='\n'){fixed+='\\n';continue;}
+      if(c==='\r'){fixed+='\\r';continue;}
+      if(c==='\t'){fixed+='\\t';continue;}
+      // その他の制御文字を除去
+      if(c.charCodeAt(0)<0x20){continue;}
+    }
+    fixed+=c;
+  }
+
+  // 末尾カンマを除去（trailing comma）
+  fixed=fixed.replace(/,(\s*[}\]])/g,'$1');
+
+  try{
+    return JSON.parse(fixed);
+  }catch(e){
+    throw new Error(`JSON解析エラー（${e.message}）。再生成してください。`);
+  }
+}
+// ────────────────────────────────────────────────────────────────
+
+let S={key:localStorage.getItem('stock_api_key')||'',report:null,loading:false,phase:'',tab:'news',hist:[],curKey:null,error:null,exp:{}};
+
+const saveR=(k,r)=>{try{localStorage.setItem(k,JSON.stringify(r));}catch(e){}};
+const loadR=(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}};
+const loadHist=()=>{const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('jstock_'))ks.push(k);}S.hist=ks.sort().reverse();};
+
+async function generate(){
+  if(!S.key){render();return;}
+  S.loading=true;S.error=null;S.report=null;
+  let pi=0;S.phase=PHASES[0];render();
+  const iv=setInterval(()=>{pi=(pi+1)%PHASES.length;S.phase=PHASES[pi];const el=document.getElementById('ph');if(el)el.textContent=S.phase;},3500);
+  try{
+    const d=new Date(),days=['日','月','火','水','木','金','土'];
+    const ds=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':S.key,'anthropic-version':'2023-06-01','anthropic-beta':'web-search-2025-03-05'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,system:SYS,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:`今日は${ds}です。直近の取引日の日本株で話題になっているニュース銘柄（3〜5社）と、今後1〜3ヶ月で上昇が期待できる期待銘柄（2〜3社）を、ウェブ検索で最新情報を取得した上で選び、詳細な投資分析レポートをJSON形式で出力してください。`}]})
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({error:{message:`HTTP ${res.status}`}}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
+    const data=await res.json();
+    const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const parsed=extractJSON(text);
+    const k=getKey();saveR(k,parsed);
+    S.report=parsed;S.curKey=k;loadHist();S.tab='news';
+  }catch(e){S.error=e.message;}
+  finally{clearInterval(iv);S.loading=false;render();}
+}
+
+function render(){
+  if(!S.key){renderSetup();return;}
+  if(S.loading){renderLoading();return;}
+  renderMain();
+}
+
+function renderSetup(){
+  document.getElementById('app').innerHTML=`
+  <div id="setup">
+    <div style="font-size:64px;margin-bottom:20px">📈</div>
+    <div style="font-size:24px;font-weight:700;color:var(--tx);margin-bottom:8px">日本株レポート</div>
+    <div style="font-size:14px;color:var(--mu);margin-bottom:32px;line-height:1.7">毎日の注目銘柄と期待銘柄を<br>AIが自動で分析します</div>
+    <div style="width:100%;max-width:360px;text-align:left">
+      <div style="font-size:12px;color:var(--mu);margin-bottom:8px">Anthropic API キー</div>
+      <input id="ki" class="sin" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <div style="font-size:11px;color:var(--dm);margin-bottom:20px;line-height:1.7">
+        キーは端末内にのみ保存されます。<br>
+        <a href="https://console.anthropic.com" target="_blank" style="color:var(--ac)">console.anthropic.com</a> から取得してください。
+      </div>
+      <button class="sbtn" onclick="saveKey()">はじめる</button>
+    </div>
+  </div>`;
+}
+
+function saveKey(){
+  const v=document.getElementById('ki').value.trim();
+  if(!v){alert('APIキーを入力してください');return;}
+  S.key=v;localStorage.setItem('stock_api_key',v);init();
+}
+
+function renderLoading(){
+  document.getElementById('app').innerHTML=`
+  <div id="loading">
+    <div style="font-size:48px;margin-bottom:16px;animation:pulse 1s infinite">⚡</div>
+    <div id="ph" style="font-size:15px;color:var(--tx);margin-bottom:8px">${S.phase}</div>
+    <div style="font-size:12px;color:var(--mu)">AIがウェブを検索して市場情報を分析中</div>
+  </div>`;
+}
+
+function renderMain(){
+  const R=S.report;
+  const mbar=R?.market?`
+  <div class="mbar">
+    <div class="mi"><div class="mi-l">日経平均</div><div class="mi-v">${fN(R.market.nikkei)}</div>${R.market.nikkei_change_pct!=null?`<div class="mi-ch" style="color:${pC(R.market.nikkei_change_pct)}">${fP(R.market.nikkei_change_pct)}</div>`:''}</div>
+    <div class="mi"><div class="mi-l">TOPIX</div><div class="mi-v">${fN(R.market.topix)}</div></div>
+    <div class="mi"><div class="mi-l">USD/JPY</div><div class="mi-v">${R.market.usd_jpy?`${R.market.usd_jpy}円`:'—'}</div></div>
+  </div>`:'' ;
+
+  const tabs=['news','future','history'].map(id=>{
+    const ico=id==='news'?'📰':id==='future'?'🔮':'📅';
+    const lbl=id==='news'?'ニュース':id==='future'?'期待銘柄':'履歴';
+    return `<button class="tb ${S.tab===id?'on':''}" onclick="setTab('${id}')"><span class="ico">${ico}</span><span>${lbl}</span></button>`;
+  }).join('');
+
+  let body='';
+  if(!R&&!S.error)body=`<div class="empty"><div style="font-size:32px;margin-bottom:12px">📊</div>「再生成」でレポートを生成できます</div>`;
+  else if(S.error)body=`<div class="err">❌ ${S.error}<br><button onclick="generate()" style="margin-top:10px;background:var(--dn);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit">再試行</button></div>`;
+  else if(R){
+    if(S.tab==='history')body=renderHistory();
+    else{
+      const stocks=S.tab==='news'?(R.news_stocks||[]):(R.future_stocks||[]);
+      const type=S.tab;
+      body=(R.market?.summary?`<div class="summary"><div class="summary-l">📊 市場サマリー</div>${R.market.summary}</div>`:'')+
+        stocks.map((s,i)=>renderCard(s,type,i)).join('')+
+        `<div class="disc">⚠️ AI生成の情報提供目的レポートです。投資判断は自己責任でお願いします。「—」は取得できなかった値です。</div>`;
+    }
+  }
+
+  document.getElementById('app').innerHTML=`
+  <div id="hdr">
+    <div class="hdr-row">
+      <div>
+        <div class="hdr-sub">JP DAILY REPORT</div>
+        <div class="hdr-title">📈 日本株レポート</div>
+      </div>
+      <button class="rbtn" onclick="generate()">🔄 再生成</button>
+    </div>
+    ${mbar}
+    ${R?`<div style="font-size:9px;color:var(--dm);margin-top:6px;text-align:right">${R.report_date||''}</div>`:''}
+  </div>
+  <div id="content">${body}</div>
+  <div id="tabs">${tabs}</div>`;
+}
+
+function renderCard(s,type,idx){
+  const vs=VS[s.verdict]||VS['様子見'];
+  const id=`${type}_${idx}`;
+  const open=S.exp[id]!==false;
+  const isN=type==='news';
+  return `
+  <div class="card">
+    <div class="chd" onclick="tog('${id}')">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
+          <span class="code-pill">${s.code}</span>
+          <span class="exch-pill">${s.exchange}</span>
+          <span class="pill" style="background:${vs.bg};color:${vs.tx};border:1px solid ${vs.bd}">${s.verdict}</span>
+        </div>
+        <div style="font-size:15px;font-weight:700;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+      </div>
+      <div style="flex-shrink:0;text-align:right;margin-left:10px">
+        <div class="mono" style="font-size:14px;font-weight:700;color:var(--tx)">${fN(s.price,'円')}</div>
+        <div class="mono" style="font-size:12px;font-weight:700;color:${pC(s.change_pct)}">${fP(s.change_pct)}</div>
+        <div style="font-size:14px;color:var(--mu);margin-top:3px">${open?'▲':'▼'}</div>
+      </div>
+    </div>
+    ${open?`
+    <div class="cbd">
+      <div class="mgrid">
+        <div class="mgi"><div class="mgi-l">時価総額</div><div class="mgi-v">${fN(s.market_cap_b,'億')}</div></div>
+        <div class="mgi"><div class="mgi-l">PER（株価÷利益）</div><div class="mgi-v">${fN(s.per,'倍')}</div></div>
+        <div class="mgi"><div class="mgi-l">PBR（株価÷純資産）</div><div class="mgi-v">${fN(s.pbr,'倍')}</div></div>
+        <div class="mgi"><div class="mgi-l">配当利回り</div><div class="mgi-v">${fN(s.div_yield,'%')}</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px">
+        <span style="background:var(--s2);border:1px solid var(--bd);padding:1px 6px;border-radius:4px;margin-right:5px">${s.sector}</span>${s.business}
+      </div>
+      <div class="ibox">
+        <div class="ibox-l">${isN?'📰 今日のニュース':'🔮 注目理由'}</div>
+        <div class="ibox-t">${isN?s.news_headline:s.why_future}</div>
+      </div>
+      <div class="bbgrid">
+        <div class="bull"><div class="bb-l" style="color:var(--up)">▲ ${isN?'上昇材料':'期待材料'}</div><div class="bb-t">${isN?s.bull_case:s.catalyst}</div></div>
+        <div class="bear"><div class="bb-l" style="color:var(--dn)">▼ リスク</div><div class="bb-t">${isN?s.bear_case:s.risk}</div></div>
+      </div>
+      <div class="vbar" style="background:${vs.bg};border:1px solid ${vs.bd}">
+        <span style="font-size:12px;font-weight:700;color:${vs.tx};white-space:nowrap">総合判断：${s.verdict}</span>
+        <span style="font-size:12px;color:var(--tx);line-height:1.6">${s.verdict_reason}</span>
+      </div>
+    </div>`:''}
+  </div>`;
+}
+
+function renderHistory(){
+  if(!S.hist.length)return `<div class="empty">履歴がありません</div>`;
+  return `<div style="font-size:12px;color:var(--mu);margin-bottom:12px">保存済みレポート</div>`+
+    S.hist.map(k=>{
+      const r=loadR(k);const on=k===S.curKey;
+      return `<div class="hcard ${on?'on':''}" onclick="fromHist('${k}')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="mono" style="font-size:14px;font-weight:600;color:${on?'var(--ac)':'var(--tx)'}">${kLbl(k)}</div>
+          ${on?'<span class="pill" style="background:var(--acbd);color:#fff">表示中</span>':''}
+        </div>
+        ${r?.report_date?`<div style="font-size:11px;color:var(--mu);margin-top:3px">${r.report_date}</div>`:''}
+        ${r?.news_stocks?`<div style="font-size:11px;color:var(--dm);margin-top:5px">📰 ${r.news_stocks.length}社　🔮 ${(r.future_stocks||[]).length}社</div>`:''}
+      </div>`;
+    }).join('')+
+    `<button onclick="clearKey()" style="background:var(--dnb);border:1px solid #da363344;border-radius:9px;padding:12px 14px;color:var(--dn);font-size:13px;cursor:pointer;width:100%;margin-top:16px;font-family:inherit">🔑 APIキーを変更する</button>`;
+}
+
+function setTab(t){S.tab=t;renderMain();}
+function tog(id){S.exp[id]=S.exp[id]===false?true:false;renderMain();}
+function fromHist(k){const r=loadR(k);if(r){S.report=r;S.curKey=k;S.tab='news';renderMain();}}
+function clearKey(){if(confirm('APIキーを削除しますか？')){localStorage.removeItem('stock_api_key');S.key='';render();}}
+
+async function init(){
+  loadHist();
+  const k=getKey();const r=loadR(k);
+  if(r){S.report=r;S.curKey=k;S.tab='news';renderMain();}
+  else await generate();
+}
+
+S.key?init():renderSetup();
+</script>
+</body>
+</html>
